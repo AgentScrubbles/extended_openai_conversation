@@ -276,7 +276,12 @@ class ExtendedOpenAIBaseLLMEntity(Entity):
             # Update tool_choice based on function call count
             # -1 means unlimited function calls
             if tools and 0 <= max_function_calls <= n_requests:
-                tool_kwargs["tool_choice"] = "none"
+                # Strip tools entirely instead of setting tool_choice to "none".
+                # Local LLMs (llama.cpp) still include tool definitions in the chat
+                # template when tool_choice is "none", causing the model to output
+                # <tool_call> as text instead of responding conversationally.
+                tool_kwargs.pop("tools", None)
+                tool_kwargs.pop("tool_choice", None)
 
             _LOGGER.info("Prompt for %s: %s", model, json.dumps(messages))
 
